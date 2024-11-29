@@ -6,7 +6,7 @@ The members of the team are:
 - Ruijie Li
 - Yasir Kabir Sattar
 - Yau Hei Leung (Aidan)
-- *enter full name 5 here*
+- Abu Sayyed Khan
 
 ## Project structure
 The project is called `task_manager`.  It currently consists of a single app `tasks`.
