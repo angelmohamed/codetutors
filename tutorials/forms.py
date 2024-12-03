@@ -4,22 +4,33 @@ from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from .models import User
 
+
 class LogInForm(forms.Form):
     """Form enabling registered users to log in."""
 
     username = forms.CharField(label="Username")
     password = forms.CharField(label="Password", widget=forms.PasswordInput())
 
+    def clean(self):
+        """Authenticate the user and raise validation errors if login fails."""
+        cleaned_data = super().clean()
+        username = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+
+        if username and password:
+            # Authenticate the user
+            user = authenticate(username=username, password=password)
+            if user is None:
+                raise ValidationError('Invalid username or password.')
+            if not user.is_active:
+                raise ValidationError('This account is inactive.')
+            # Store the user object for later use
+            cleaned_data['user'] = user
+        return cleaned_data
+
     def get_user(self):
         """Returns authenticated user if possible."""
-
-        user = None
-        if self.is_valid():
-            username = self.cleaned_data.get('username')
-            password = self.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-        return user
-
+        return self.cleaned_data.get('user')
 
 class UserForm(forms.ModelForm):
     """Form to update user profiles."""

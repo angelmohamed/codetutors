@@ -15,7 +15,9 @@
       Looks good!
     </div>
     <div class="invalid-feedback">
-      {{ field.errors }}
+      {% for error in field.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
     </div>
   </div>
 {% endfor %}
