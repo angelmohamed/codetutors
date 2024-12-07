@@ -1,36 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Code Tutors</title>
-  <link rel="stylesheet" href="static/custom.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-  <div class="container">
-    <div class="row justify-content-center align-items-center vh-100">
-      <div class="col-sm-12 col-md-6 col-lg-4">
-        <div class="card p-4 shadow">
-          <h1 class="text-center mb-4">Log in</h1>
-          <form action="/login/" method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-              <label for="username" class="form-label">Username</label>
-              <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Log in</button>
-          </form>
-          <p class="text-center mt-3">
-            <a href="{% url 'sign_up' %}">Don't have an account? Sign up here</a>
-          </p>
-        </div>
+{% extends 'base_content.html' %}
+{% block content %}
+<style>
+  .centered-card {
+    border-radius: 20px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for better appearance */
+    padding: 20px; /* Add some internal spacing */
+    max-width: 500px; /* Adjust the width of the card */
+    width: 80%; /* Ensure it stays responsive */
+  }
+
+  /* Styling for the input fields */
+  .form-control {
+    font-size: 1rem; /* Consistent font size */
+    padding: 10px; /* Add padding inside the input fields */
+    border-radius: 8px; /* Rounded corners */
+    border: 1px solid #ced4da; /* Light border color */
+    transition: border-color 0.3s ease; /* Smooth transition for focus */
+    width: 100%; /* Ensure the input fields take the full width */
+  }
+
+  .form-control:focus {
+    border-color: #0d6efd; /* Blue border when focused */
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.5); /* Light shadow on focus */
+  }
+
+  /* Styling to make buttons the same */
+  .btn-primary {
+    font-size: 1rem; /* Consistent font size */
+    width: 100%; /* Make the button take full width of its container */
+    padding: 12px 0; /* Add padding to top and bottom */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #0d6efd; /* Blue color */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    cursor: pointer; /* Pointer on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+  }
+
+  /* Styling for the link to register */
+  .register-text {
+    margin-top: 15px; /* Space between button and text */
+    text-align: center; /* Center the text */
+  }
+
+  .register-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+
+  .register-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="container vh-100 d-flex justify-content-center align-items-center">
+  <div class="card centered-card">
+    <h1 class="mb-4 text-center">Login</h1>
+    <form action="/login/" method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
       </div>
-    </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+      </div>
+      <button type="submit" class="btn-primary">Log in</button>
+      <p class="register-text">Don't have an account? 
+        <a href="{% url 'sign_up' %}" class="register-link">
+          Sign up
+        </a>
+      </p>
+    </form>
   </div>
-</body>
-</html>
+</div>
+
+{% endblock %}

@@ -1,15 +1,11 @@
 /*
- * Alerts
- */
-
-.alert {
-  border-radius: 0px;
-}
-
-
-/*
  * Cover page
  */
+
+.body-style {
+  background: url('/static/electric-pink-color-abstraction.jpg') no-repeat center center;
+
+} 
 
 .content {
   padding-top: 10px;
@@ -37,16 +33,18 @@ p.cover-text {
 }
 
 .cover-card {
-  background-color: rgba(245, 245, 245, 0.6);
+  background-size: cover;
   max-width: 30rem;
   padding-top: 30px;
   padding-left: 50px;
   padding-right: 50px;
   padding-bottom: 30px;
   border-radius: 15%;
+  color: #000000; /* Optional: Set text color to ensure readability on the background */
 }
+
 .cover-card-block {
-  opacity: 1
+  opacity: 1;
 }
 
 

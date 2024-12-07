@@ -1,22 +1,40 @@
-{% extends 'base.html' %}
-{% block body %}
-  <div class="container vh-100">
-    <div class="row h-100">
-      <div class="col-12 my-auto">
-        <div class="card cover-card offset-sm-2 offset-md-4 offset-lg-7">
-          <h1 class="cover-heading">Code Tutors</h1>
-          <p class="cover-text">Code Tutors application by Team <i>Insert team name here (or revise this home screen as you see fit)</i></p>
-          <p>
-            <a href='{% url 'sign_up' %}' class="btn btn-lg btn-secondary">
-              Sign up
-            </a>
-          </p>
-          <p>
-            <a href='{% url 'log_in' %}' class="btn btn-lg btn-secondary">
-              Log in
-            </a>
-          </p>
-        </div>
+{% extends 'base_content.html' %}
+{% block content %}
+  <style>
+    .cover-card {
+      border-radius: 20px; /* Adjust the corner radius */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add a shadow for better effect */
+      padding: 20px; /* Add spacing inside the card */
+    }
+
+    .small-heading {
+      font-size: 2rem; /* Adjust heading size */
+    }
+
+    .small-text {
+      font-size: 1rem; /* Adjust text size */
+      color: #555; /* Optional: Dim the text color for readability */
+    }
+
+    .small-btn {
+      font-size: 1rem; /* Adjust button text size */
+    }
+  </style>
+  <div class="container vh-100 d-flex justify-content-center align-items-center">
+    <div class="card cover-card text-center">
+      <h1 class="small-heading">Code Tutors</h1>
+      <p class="small-text">
+        Code Tutors application by Team 
+        <i>Code Tutors App is an innovative platform designed to connect learners with experienced coding tutors. Whether you're a beginner or looking to enhance your programming skills, the app provides a user-friendly interface for discovering and booking personalized 
+          lessons with expert tutors in various programming languages and technologies. With features like flexible scheduling, video tutorials, and a wide range of courses, Code Tutors ensures that you receive the best learning experience at your own pace. The app aims to make coding education accessible and engaging for everyone, helping you achieve your programming goals efficiently.</i>
+      </p>
+      <div class="d-flex justify-content-center gap-2">
+        <a href="{% url 'sign_up' %}" class="btn btn-lg btn-secondary small-btn">
+          Sign up
+        </a>
+        <a href="{% url 'log_in' %}" class="btn btn-lg btn-secondary small-btn">
+          Log in
+        </a>
       </div>
     </div>
   </div>
