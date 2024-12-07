@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
-from .models import User
+from .models import User, StudentProfile, TutorProfile
 
 
 class LogInForm(forms.Form):
@@ -98,24 +98,62 @@ class PasswordForm(NewPasswordMixin):
         return self.user
 
 
-class SignUpForm(NewPasswordMixin, forms.ModelForm):
-    """Form enabling unregistered users to sign up."""
+class SignUpForm(forms.ModelForm):
+    """Form enabling unregistered users to sign up as either a student or tutor."""
+
+    USER_TYPE_CHOICES = [
+        ('student', 'Student'),
+        ('tutor', 'Tutor'),
+    ]
+    user_type = forms.ChoiceField(
+        choices=USER_TYPE_CHOICES,
+        required=True,
+        help_text="Select whether you are signing up as a student or a tutor."
+    )
+    new_password = forms.CharField(
+        widget=forms.PasswordInput,
+        label="Password",
+        required=True
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput,
+        label="Confirm Password",
+        required=True
+    )
 
     class Meta:
         """Form options."""
-
         model = User
         fields = ['first_name', 'last_name', 'username', 'email']
 
-    def save(self):
-        """Create a new user."""
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('new_password')
+        confirm = cleaned_data.get('confirm_password')
+        if password and confirm and password != confirm:
+            self.add_error('confirm_password', "Passwords do not match.")
+        return cleaned_data
 
-        super().save(commit=False)
+    def save(self, commit=True):
+        """Create a new user and their corresponding profile."""
+        user_type = self.cleaned_data.get('user_type')
+        is_student = True if user_type == 'student' else False
+
         user = User.objects.create_user(
-            self.cleaned_data.get('username'),
+            username=self.cleaned_data.get('username'),
             first_name=self.cleaned_data.get('first_name'),
             last_name=self.cleaned_data.get('last_name'),
             email=self.cleaned_data.get('email'),
             password=self.cleaned_data.get('new_password'),
         )
+        
+        user.is_student = is_student
+        if commit:
+            user.save()
+
+        if is_student:
+            StudentProfile.objects.create(user=user)
+        else:
+            TutorProfile.objects.create(user=user)
+
         return user

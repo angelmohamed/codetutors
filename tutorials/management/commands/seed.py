@@ -1,4 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+
+import logging
 
 from tutorials.models import User
 
@@ -12,11 +15,13 @@ user_fixtures = [
     {'username': '@charlie', 'email': 'charlie.johnson@example.org', 'first_name': 'Charlie', 'last_name': 'Johnson'},
 ]
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 class Command(BaseCommand):
     """Build automation command to seed the database."""
 
-    USER_COUNT = 15
+    USER_COUNT = 10
     DEFAULT_PASSWORD = 'Password123'
     help = 'Seeds the database with sample data'
 
@@ -46,6 +51,7 @@ class Command(BaseCommand):
     def generate_user(self):
         first_name = self.faker.first_name()
         last_name = self.faker.last_name()
+        
         email = create_email(first_name, last_name)
         username = create_username(first_name, last_name)
         self.try_create_user({'username': username, 'email': email, 'first_name': first_name, 'last_name': last_name})
@@ -57,14 +63,23 @@ class Command(BaseCommand):
             pass
 
     def create_user(self, data):
-        User.objects.create_user(
-            username=data['username'],
-            email=data['email'],
-            password=Command.DEFAULT_PASSWORD,
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            is_staff=True,
-        )
+        logging.debug(f"Creating user with data: {data}")
+        try:
+            with transaction.atomic():
+
+                User.objects.create_user(
+                    username=data['username'],
+                    email=data['email'],
+                    password=Command.DEFAULT_PASSWORD,
+                    first_name=data['first_name'],
+                    last_name=data['last_name'],
+                    is_staff=True,
+                    is_superuser=True,
+                )
+            logging.debug("User created successfully")
+
+        except Exception as e:
+            logging.error(f"Error creating user: {e}")
 
 def create_username(first_name, last_name):
     return '@' + first_name.lower() + last_name.lower()

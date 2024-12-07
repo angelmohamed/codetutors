@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
@@ -15,6 +15,7 @@ from tutorials.helpers import login_prohibited
 @login_required
 def dashboard(request):
     """Display the current user's dashboard."""
+
     current_user = request.user
     return render(request, 'dashboard.html', {'user': current_user})
 
@@ -22,12 +23,13 @@ def dashboard(request):
 @login_prohibited
 def home(request):
     """Display the application's start/home screen."""
+
     return render(request, 'home.html')
 
 
 class LoginProhibitedMixin:
     """Mixin that redirects when a user is logged in."""
-    
+
     redirect_when_logged_in_url = None
 
     def dispatch(self, *args, **kwargs):
@@ -60,34 +62,32 @@ class LogInView(LoginProhibitedMixin, View):
 
     def get(self, request):
         """Display log in template."""
+
         self.next = request.GET.get('next') or ''
         return self.render()
 
     def post(self, request):
         """Handle log in attempt."""
+
         form = LogInForm(request.POST)
         self.next = request.POST.get('next') or settings.REDIRECT_URL_WHEN_LOGGED_IN
-        
-        if form.is_valid():
-            user = form.get_user()
-            if user:
-                login(request, user)
-                return redirect(self.next)  # Redirect to the next page
-            else:
-                messages.error(request, "Invalid credentials, please try again.")
-        else:
-            messages.error(request, "Please fill in the form correctly.")
-        
+        user = form.get_user()
+        if user is not None:
+            login(request, user)
+            return redirect(self.next)
+        messages.add_message(request, messages.ERROR, "The credentials provided were invalid!")
         return self.render()
 
     def render(self):
         """Render log in template with blank log in form."""
+
         form = LogInForm()
         return render(self.request, 'log_in.html', {'form': form, 'next': self.next})
 
 
 def log_out(request):
-    """Log out the current user."""
+    """Log out the current user"""
+
     logout(request)
     return redirect('home')
 
@@ -100,18 +100,21 @@ class PasswordView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self, **kwargs):
         """Pass the current user to the password change form."""
+
         kwargs = super().get_form_kwargs(**kwargs)
         kwargs.update({'user': self.request.user})
         return kwargs
 
     def form_valid(self, form):
         """Handle valid form by saving the new password."""
+
         form.save()
         login(self.request, self.request.user)
         return super().form_valid(form)
 
     def get_success_url(self):
         """Redirect the user after successful password change."""
+
         messages.add_message(self.request, messages.SUCCESS, "Password updated!")
         return reverse('dashboard')
 
@@ -142,11 +145,9 @@ class SignUpView(LoginProhibitedMixin, FormView):
     redirect_when_logged_in_url = settings.REDIRECT_URL_WHEN_LOGGED_IN
 
     def form_valid(self, form):
-        """Save the new user and log them in."""
         self.object = form.save()
         login(self.request, self.object)
         return super().form_valid(form)
 
     def get_success_url(self):
-        """Redirect after successful sign-up."""
         return reverse(settings.REDIRECT_URL_WHEN_LOGGED_IN)

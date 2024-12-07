@@ -9,4 +9,5 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Unseed the database."""
 
-        User.objects.filter(is_staff=False).delete()
+#        User.objects.filter(is_staff=False).delete()
+        User.objects.filter().delete()
