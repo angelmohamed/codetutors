@@ -17,7 +17,12 @@ def dashboard(request):
     """Display the current user's dashboard."""
 
     current_user = request.user
-    return render(request, 'dashboard.html', {'user': current_user})
+
+    if current_user.is_student:
+        return render(request, 'student_dashboard.html', {'user': current_user})
+    else:
+
+     return render(request, 'tutor_dashboard.html', {'user': current_user})
 
 
 @login_prohibited
@@ -71,12 +76,16 @@ class LogInView(LoginProhibitedMixin, View):
 
         form = LogInForm(request.POST)
         self.next = request.POST.get('next') or settings.REDIRECT_URL_WHEN_LOGGED_IN
-        user = form.get_user()
-        if user is not None:
-            login(request, user)
-            return redirect(self.next)
-        messages.add_message(request, messages.ERROR, "The credentials provided were invalid!")
-        return self.render()
+        if form.is_valid():  # Ensure form is validated first
+            user = form.get_user()
+            if user:
+                login(request, user)
+                return redirect(self.next)
+            messages.add_message(request, messages.ERROR, "The credentials provided were invalid!")
+        else:
+            messages.add_message(request, messages.ERROR, "Invalid input. Please correct the errors below.")
+        return self.render(request, 'log_in.html', {'form': form, 'next': self.next})
+
 
     def render(self):
         """Render log in template with blank log in form."""
