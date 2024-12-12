@@ -35,12 +35,21 @@ class LogInForm(forms.Form):
 
 class UserForm(forms.ModelForm):
     """Form to update user profiles."""
-
     class Meta:
-        """Form options."""
-
         model = User
         fields = ['first_name', 'last_name', 'username', 'email']
+
+class TutorProfileForm(forms.ModelForm):
+    """Form to update tutor profile details."""
+    class Meta:
+        model = TutorProfile
+        fields = ['bio', 'experience_years', 'contact_number', 'languages', 'specializations']
+        """
+        widgets = {
+            'languages': forms.CheckboxSelectMultiple(),
+            'specializations': forms.CheckboxSelectMultiple(),
+        }
+        """
 
 class NewPasswordMixin(forms.Form):
     """Form mixing for new_password and password_confirmation fields."""

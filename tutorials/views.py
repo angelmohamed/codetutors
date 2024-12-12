@@ -11,18 +11,33 @@ from django.urls import reverse
 from tutorials.forms import LogInForm, PasswordForm, UserForm, SignUpForm
 from tutorials.helpers import login_prohibited
 
+from .forms import User, UserForm, TutorProfileForm
+from .models import User, TutorProfile
 
 @login_required
 def dashboard(request):
     """Display the current user's dashboard."""
-
     current_user = request.user
-
     if current_user.is_student:
         return render(request, 'student_dashboard.html', {'user': current_user})
     else:
-        return render(request, 'tutor_dashboard.html', {'user': current_user})
-    
+        # For a tutor, provide both UserForm and TutorProfileForm
+        user_form = UserForm(instance=current_user)
+        # Ensure tutor_profile exists
+        tutor_profile = getattr(current_user, 'tutor_profile', None)
+        if not tutor_profile:
+            tutor_profile = TutorProfile.objects.create(user=current_user)
+
+        tutor_form = TutorProfileForm(instance=tutor_profile)
+        return render(
+            request, 
+            'tutor_dashboard.html', 
+            {
+                'user': current_user,
+                'form': user_form,
+                'tutor_form': tutor_form
+            }
+        )
 
 
 
@@ -153,22 +168,31 @@ class PasswordView(LoginRequiredMixin, FormView):
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    """Display user profile editing screen, and handle profile modifications."""
-
-    model = UserForm
-    template_name = "profile.html"
+    """Update user details."""
+    model = User
     form_class = UserForm
+    template_name = "profile.html"
 
     def get_object(self):
-        """Return the object (user) to be updated."""
-        user = self.request.user
-        return user
+        return self.request.user
 
     def get_success_url(self):
-        """Return redirect URL after successful update."""
-        messages.add_message(self.request, messages.SUCCESS, "Profile updated!")
-        return reverse(settings.REDIRECT_URL_WHEN_LOGGED_IN)
+        messages.success(self.request, "Profile updated!")
+        return reverse('dashboard')
 
+class TutorProfileUpdateView(LoginRequiredMixin, UpdateView):
+    """Update tutor profile details."""
+    model = TutorProfile
+    form_class = TutorProfileForm
+    template_name = "tutor_profile.html"
+
+    def get_object(self):
+        # Return the current user's tutor profile
+        return self.request.user.tutor_profile
+
+    def get_success_url(self):
+        messages.success(self.request, "Tutor profile updated!")
+        return reverse('dashboard')
 
 class SignUpView(LoginProhibitedMixin, FormView):
     """Display the sign up screen and handle sign ups."""
