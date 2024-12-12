@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
 from .models import User, StudentProfile, TutorProfile
+from django.core.exceptions import ValidationError
 
 
 class LogInForm(forms.Form):
