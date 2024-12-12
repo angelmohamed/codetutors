@@ -20,6 +20,7 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=50, blank=False)
     email = models.EmailField(unique=True, blank=False)
     is_student = models.BooleanField(default=True)
+    is_tutor = models.BooleanField(default=False)
 
     class Meta:
         """Model options."""

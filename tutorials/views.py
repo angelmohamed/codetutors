@@ -21,8 +21,9 @@ def dashboard(request):
     if current_user.is_student:
         return render(request, 'student_dashboard.html', {'user': current_user})
     else:
+        return render(request, 'tutor_dashboard.html', {'user': current_user})
+    
 
-     return render(request, 'tutor_dashboard.html', {'user': current_user})
 
 
 @login_prohibited
@@ -58,7 +59,6 @@ class LoginProhibitedMixin:
         else:
             return self.redirect_when_logged_in_url
 
-
 class LogInView(LoginProhibitedMixin, View):
     """Display login screen and handle user login."""
 
@@ -67,16 +67,14 @@ class LogInView(LoginProhibitedMixin, View):
 
     def get(self, request):
         """Display log in template."""
-
         self.next = request.GET.get('next') or ''
         return self.render()
 
     def post(self, request):
         """Handle log in attempt."""
-
         form = LogInForm(request.POST)
         self.next = request.POST.get('next') or settings.REDIRECT_URL_WHEN_LOGGED_IN
-        if form.is_valid():  # Ensure form is validated first
+        if form.is_valid():# Ensure form is validated first
             user = form.get_user()
             if user:
                 login(request, user)
@@ -84,12 +82,11 @@ class LogInView(LoginProhibitedMixin, View):
             messages.add_message(request, messages.ERROR, "The credentials provided were invalid!")
         else:
             messages.add_message(request, messages.ERROR, "Invalid input. Please correct the errors below.")
+            
         return self.render(request, 'log_in.html', {'form': form, 'next': self.next})
 
-
     def render(self):
-        """Render log in template with blank log in form."""
-
+        """Render log in template with the given context."""
         form = LogInForm()
         return render(self.request, 'log_in.html', {'form': form, 'next': self.next})
 
@@ -99,6 +96,33 @@ def log_out(request):
 
     logout(request)
     return redirect('home')
+
+def tutor_log_in(request):
+    """Handle login for tutors."""
+    form = LogInForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = form.get_user()
+        if user and user.is_tutor:  # Ensure the user is a tutor
+            login(request, user)
+            return redirect('dashboard')  # Redirect to tutor dashboard
+        else:
+            messages.error(request, "Invalid credentials or you are not a tutor.")
+    return render(request, 'log_in.html', {'form': form})
+
+
+
+def student_log_in(request):
+    """Handle login for students."""
+    form = LogInForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = form.get_user()
+        if user and user.is_student:
+            login(request, user)
+            return redirect('dashboard')  # Redirect to student dashboard
+        else:
+            messages.error(request, "Invalid credentials or you are not a student.")
+    return render(request, 'log_in.html', {'form': form})
+
 
 
 class PasswordView(LoginRequiredMixin, FormView):
@@ -160,3 +184,4 @@ class SignUpView(LoginProhibitedMixin, FormView):
 
     def get_success_url(self):
         return reverse(settings.REDIRECT_URL_WHEN_LOGGED_IN)
+    
