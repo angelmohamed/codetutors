@@ -1,12 +1,10 @@
 {% extends 'base_content.html' %}
 {% block content %}
 <div class="container">
-  <div class="row">
-    <div class="col-12">
-      <h1>Welcome to your tutor dashboard {{ user.username }}</h1>
-      
-
-    </div>
+  <h1 class="text-center">Welcome, Tutor {{ user.username }}</h1>
+  <p class="text-center">This is your tutor dashboard. Manage your lessons, schedule, and more here.</p>
+  <div class="text-center">
+    <a href="{% url 'log_out' %}" class="btn btn-danger">Log Out</a>
   </div>
 </div>
 {% endblock %}

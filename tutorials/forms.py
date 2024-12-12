@@ -22,9 +22,9 @@ class LogInForm(forms.Form):
             # Authenticate the user
             user = authenticate(username=username, password=password)
             if user is None:
-                raise ValidationError('Invalid username or password.')
+                raise forms.ValidationError('Invalid username or password.')
             if not user.is_active:
-                raise ValidationError('This account is inactive.')
+                raise forms.ValidationError('This account is inactive.')
             # Store the user object for later use
             cleaned_data['user'] = user
         return cleaned_data
@@ -139,6 +139,7 @@ class SignUpForm(forms.ModelForm):
         """Create a new user and their corresponding profile."""
         user_type = self.cleaned_data.get('user_type')
         is_student = True if user_type == 'student' else False
+        is_tutor = not is_student 
 
         user = User.objects.create_user(
             username=self.cleaned_data.get('username'),
@@ -149,6 +150,7 @@ class SignUpForm(forms.ModelForm):
         )
         
         user.is_student = is_student
+        user.is_tutor = is_tutor 
         if commit:
             user.save()
 
