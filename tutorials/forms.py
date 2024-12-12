@@ -2,9 +2,8 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
-from .models import User, StudentProfile, TutorProfile
+from .models import User, StudentProfile, TutorProfile, ProgrammingLanguage, Specialization
 from django.core.exceptions import ValidationError
-
 
 class LogInForm(forms.Form):
     """Form enabling registered users to log in."""
@@ -41,15 +40,61 @@ class UserForm(forms.ModelForm):
 
 class TutorProfileForm(forms.ModelForm):
     """Form to update tutor profile details."""
+    
+    bio = forms.CharField(
+        label='Biography',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Short biography or background.'
+            }
+        ),
+        required=True
+    )
+    experience_years = forms.IntegerField(
+        label='Experience',
+        widget=forms.NumberInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Number of years tutoring'
+            }
+        ),
+        required=True
+    )
+    contact_number = forms.CharField(
+        label='Contact number',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Optional contact number'
+            }
+        ),
+        required=False
+    )
+    languages = forms.CharField(
+        label='Languages',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Programming languages this tutor can teach'
+            }
+        ),
+        required=True
+    )
+    specializations = forms.CharField(
+        label='Specializations',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Advanced topics this tutor can teach'
+            }
+        ),
+        required=False
+    )
+    
     class Meta:
         model = TutorProfile
         fields = ['bio', 'experience_years', 'contact_number', 'languages', 'specializations']
-        """
-        widgets = {
-            'languages': forms.CheckboxSelectMultiple(),
-            'specializations': forms.CheckboxSelectMultiple(),
-        }
-        """
 
 class NewPasswordMixin(forms.Form):
     """Form mixing for new_password and password_confirmation fields."""

@@ -83,16 +83,8 @@ class TutorProfile(models.Model):
         blank=True,
         help_text="Optional contact number."
     )
-    languages = models.ManyToManyField(
-        ProgrammingLanguage,
-        blank=True,
-        help_text="Programming languages this tutor can teach."
-    )
-    specializations = models.ManyToManyField(
-        Specialization,
-        blank=True,
-        help_text="Advanced topics this tutor can teach."
-    )
+    languages = models.TextField(blank=True, help_text="Programming languages this tutor can teach.")
+    specializations = models.TextField(blank=True, help_text="Advanced areas this tutor can teach.")
 
     class Meta:
         verbose_name = 'Tutor Profile'
