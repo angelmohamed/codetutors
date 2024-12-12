@@ -3,91 +3,97 @@
 <div class="container">
   <h1 class="text-center">Welcome, Student {{ user.username }}</h1>
   <p class="text-center">This is your student dashboard. Manage your lessons, schedule, and more here.</p>
-  
+
   <div class="text-center mb-4">
     <a href="{% url 'log_out' %}" class="btn btn-danger">Log Out</a>
   </div>
 
-  <!-- Nav Tabs for Dashboard Sections -->
-  <ul class="nav nav-tabs" id="tutorDashboardTab" role="tablist">
+  <ul class="nav nav-tabs" id="studentDashboardTab" role="tablist">
     <li class="nav-item">
-      <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Overview</a>
-    </li>
+      <a class="nav-link {% if not request.GET.q_name and not request.GET.q_language and not request.GET.q_specialization %}active{% endif %}" 
+         id="overview-tab" 
+         data-bs-toggle="tab" 
+         href="#overview" 
+         role="tab" 
+         aria-controls="overview" 
+         aria-selected="{% if not request.GET.q_name and not request.GET.q_language and not request.GET.q_specialization %}true{% else %}false{% endif %}">
+        Overview
+      </a>
+    </li> 
     <li class="nav-item">
-      <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Edit Profile</a>
-    </li>
+      <a class="nav-link {% if request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}active{% endif %}" 
+         id="search-tab" 
+         data-bs-toggle="tab" 
+         href="#search" 
+         role="tab" 
+         aria-controls="search" 
+         aria-selected="{% if request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}true{% else %}false{% endif %}">
+        Search Tutors
+      </a>
+    </li> 
   </ul>
 
-  <div class="tab-content mt-3" id="tutorDashboardTabContent">
-    <!-- Overview Tab Pane -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+  <div class="tab-content mt-3" id="studentDashboardTabContent">
+    <div class="tab-pane fade {% if not request.GET.q_name and not request.GET.q_language and not request.GET.q_specialization %}show active{% endif %}" 
+         id="overview" 
+         role="tabpanel" 
+         aria-labelledby="overview-tab">
       <h2>Your Lessons</h2>
-      <p>Here you can see a summary of your upcoming lessons, recent changes, and other relevant information.</p>
-    
-      {% if upcoming_lessons %}
-        <h3>Upcoming Lessons</h3>
+      <p>This is where you'd show an overview for the student (e.g., upcoming lessons, invoices, etc.).</p>
+    </div>
+
+    <div class="tab-pane fade {% if request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}show active{% endif %}" 
+         id="search" 
+         role="tabpanel" 
+         aria-labelledby="search-tab">
+      <h2>Search Tutors</h2>
+      <form method="get" action="{% url 'dashboard' %}">
+        <div class="mb-3">
+          <input type="text" class="form-control" name="q_name" placeholder="Tutor name" value="{{ request.GET.q_name|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
+          <input type="text" class="form-control" name="q_language" placeholder="Language" value="{{ request.GET.q_language|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
+          <input type="text" class="form-control" name="q_specialization" placeholder="Specialization" value="{{ request.GET.q_specialization|default_if_none:'' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+
+      {% if tutors %}
+        <h3 class="mt-4">Results</h3>
         <table class="table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Student</th>
-              <th>Venue</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Biography</th>
+              <th>Experience (Years)</th>
+              <th>Contact</th>
+              <th>Languages</th>
+              <th>Specialization</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% for lesson in upcoming_lessons %}
+            {% for tutor in tutors %}
               <tr>
-                <td>{{ lesson.start_date }}</td>
-                <td>{{ lesson.start_time }}</td>
-                <td>{{ lesson.student.user.full_name }}</td>
-                <td>{{ lesson.venue.name }}</td>
+                <td>{{ tutor.user.full_name }}</td>
+                <td>{{ tutor.user.email }}</td>
+                <td>{{ tutor.bio }}</td>
+                <td>{{ tutor.experience_years }}</td>
+                <td>{{ tutor.contact_number }}</td>
+                <td>{{ tutor.languages }}</td>
+                <td>{{ tutor.specializations }}</td>
+                <td>
+                  <a href="{% url 'request_lesson' tutor.id %}" class="btn btn-primary">Request Lesson</a>
+                </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
-      {% else %}
-        <p>No upcoming lessons at the moment.</p>
-      {% endif %}
-    </div>
-    
-
-    <!-- Edit Profile Tab Pane -->
-    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-      <h2>Update Your Profile</h2>
-      <h3>User Details</h3>
-      <form method="post" action="{% url 'profile' %}">
-        {% csrf_token %}
-        <div class="mb-3">
-          <label for="first_name" class="form-label">First Name</label>
-          <input type="text" class="form-control" name="first_name" placeholder="First Name" value="{{ user.first_name }}" required>
-        </div>
-        <div class="mb-3">
-          <label for="first_name" class="form-label">Last Name</label>
-          <input type="text" class="form-control" name="last_name" placeholder="Last Name" value="{{ user.last_name }}" required>
-        </div>
-        <div class="mb-3">
-          <label for="first_name" class="form-label">Username</label>
-          <input type="text" class="form-control" name="username" placeholder="Username" value="{{ user.username }}" required>
-        </div>
-        <div class="mb-3">
-          <label for="first_name" class="form-label">Email</label>
-          <input type="email" class="form-control" name="email" placeholder="Email" value="{{ user.email }}" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Save User Details</button>
-      </form>
-
-      <hr>
-
-      <h3>Tutor Profile Details</h3>
-      {% if tutor_form %}
-        <form method="post" action="{% url 'tutor_profile' %}">
-          {% csrf_token %}
-          {{ tutor_form.as_p }}
-          <button type="submit" class="btn btn-primary">Save Tutor Profile</button>
-        </form>
-      {% else %}
-        <p>No tutor form available. Please configure your view to pass a TutorProfileForm instance.</p>
+      {% elif request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}
+        <p class="mt-4">No tutors found matching your criteria.</p>
       {% endif %}
     </div>
   </div>

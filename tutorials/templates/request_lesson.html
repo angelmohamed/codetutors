@@ -1,0 +1,65 @@
+{% extends 'base_content.html' %}
+{% block content %}
+<div class="container">
+  <h1>Request a Lesson with {{ tutor.user.full_name }}</h1>
+  <p>Email: {{ tutor.user.email }}</p>
+  <p>Biography: {{ tutor.bio }}</p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Term field -->
+    <div class="mb-3">
+      <label for="id_term" class="form-label">Term</label>
+      {{ form.term }}
+    </div>
+
+    <!-- Requested Languages field -->
+    <div class="mb-3">
+      <label for="id_requested_languages" class="form-label">Requested Languages</label>
+      {{ form.requested_languages }}
+    </div>
+
+    <!-- Requested Specializations field -->
+    <div class="mb-3">
+      <label for="id_requested_specializations" class="form-label">Requested Specializations</label>
+      {{ form.requested_specializations }}
+    </div>
+
+    <!-- Frequency field -->
+    <div class="mb-3">
+      <label for="id_frequency" class="form-label">Frequency</label>
+      {{ form.frequency }}
+    </div>
+
+    <!-- Duration Minutes field -->
+    <div class="mb-3">
+      <label for="id_duration_minutes" class="form-label">Duration (minutes)</label>
+      {{ form.duration_minutes }}
+    </div>
+
+    <!-- Requested Start Time field -->
+    <div class="mb-3">
+      <label for="id_requested_start_time" class="form-label">Requested Start Time</label>
+      {{ form.requested_start_time }}
+    </div>
+
+    <!-- Requested Start Date field -->
+    <div class="mb-3">
+      <label for="id_requested_start_date" class="form-label">Requested Start Date</label>
+      {{ form.requested_start_date }}
+    </div>
+
+    <!-- Notes field -->
+    <div class="mb-3">
+      <label for="id_notes" class="form-label">Notes</label>
+      {{ form.notes }}
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back</a>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

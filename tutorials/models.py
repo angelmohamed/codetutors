@@ -162,21 +162,21 @@ class LessonRequest(models.Model):
         on_delete=models.CASCADE,
         related_name='lesson_requests'
     )
+    tutor = models.ForeignKey(
+        TutorProfile,
+        on_delete=models.CASCADE,
+        default=None,
+        related_name='lesson_requests'
+    )
     term = models.ForeignKey(
         Term,
         on_delete=models.CASCADE,
         related_name='lesson_requests'
     )
-    requested_languages = models.ManyToManyField(
-        ProgrammingLanguage,
-        blank=True,
-        help_text="Programming languages the student wants to learn."
-    )
-    requested_specializations = models.ManyToManyField(
-        Specialization,
-        blank=True,
-        help_text="Specialized areas the student wants to focus on."
-    )
+    requested_languages = models.TextField(blank=True, help_text="Programming languages the student wants to learn.")
+
+    requested_specializations = models.TextField(blank=True, help_text="Advanced topics the student wants to focus on.")
+
     frequency = models.CharField(
         max_length=20,
         choices=FREQUENCY_CHOICES,
@@ -185,6 +185,11 @@ class LessonRequest(models.Model):
     duration_minutes = models.PositiveIntegerField(
         default=60,
         help_text="Duration of each lesson in minutes"
+    )
+    requested_start_date = models.DateField(
+        null=True,
+        blank=False,
+        help_text="Preferred start date for the lesson"
     )
     requested_start_time = models.TimeField(
         help_text="Preferred start time for the lesson"

@@ -40,7 +40,9 @@
             <tr>
               <td>{{ lesson.date }}</td>
               <td>{{ lesson.time }}</td>
-              <td>{{ lesson.student }}</td>
+              <td>
+                <span title="Email: {{ lesson.email }}">{{ lesson.student }}</span>
+              </td>
               <td>{{ lesson.venue }}</td>
               <td>{{ lesson.address }}</td>
               <td>{{ lesson.room }}</td>
@@ -52,6 +54,7 @@
       <p>No upcoming lessons at the moment.</p>
     {% endif %}
   </div>
+  
   
     
 

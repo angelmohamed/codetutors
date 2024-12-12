@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
-from .models import User, StudentProfile, TutorProfile, ProgrammingLanguage, Specialization
+from .models import User, StudentProfile, TutorProfile, ProgrammingLanguage, Specialization, LessonRequest, Term
 from django.core.exceptions import ValidationError
 
 class LogInForm(forms.Form):
@@ -31,6 +31,52 @@ class LogInForm(forms.Form):
     def get_user(self):
         """Returns authenticated user if possible."""
         return self.cleaned_data.get('user')
+    # forms.py
+
+class LessonRequestForm(forms.ModelForm):
+    """Form for students to request a lesson."""
+
+    term = forms.ModelChoiceField(
+        queryset=Term.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
+    )
+    requested_languages = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Programming languages'}),
+        required=True
+    )
+    requested_specializations = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Specializations'}),
+        required=False
+    )
+    frequency = forms.ChoiceField(
+        choices=LessonRequest.FREQUENCY_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
+    )
+    duration_minutes = forms.IntegerField(
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'Duration in minutes'}
+        ),
+        required=True
+    )
+    requested_start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+        required=True
+    )
+    # New date field:
+    requested_start_date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        required=True
+    )
+    notes = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Additional notes'}),
+        required=False
+    )
+
+    class Meta:
+        model = LessonRequest
+        fields = ['term', 'requested_languages', 'requested_specializations', 'frequency', 'duration_minutes', 'requested_start_time', 'requested_start_date', 'notes']
 
 class UserForm(forms.ModelForm):
     """Form to update user profiles."""

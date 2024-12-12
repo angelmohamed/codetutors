@@ -4,6 +4,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic.edit import FormView, UpdateView
@@ -18,12 +19,40 @@ from datetime import datetime
 
 from datetime import datetime, timedelta
 
+
 @login_required
 def dashboard(request):
     """Display the current user's dashboard."""
     current_user = request.user
     if current_user.is_student:
-        return render(request, 'student_dashboard.html', {'user': current_user})
+        # Extract query parameters if present
+        q_name = request.GET.get('q_name', '').strip()
+        q_language = request.GET.get('q_language', '').strip()
+        q_specialization = request.GET.get('q_specialization', '').strip()
+
+        tutors = None
+        # If any search param is provided, perform a search
+        if q_name or q_language or q_specialization:
+            tutors = TutorProfile.objects.select_related('user')
+
+            # Filter by name (first_name or last_name)
+            if q_name:
+                tutors = tutors.filter(
+                    Q(user__first_name__icontains=q_name) |
+                    Q(user__last_name__icontains=q_name) |
+                    Q(user__username__icontains=q_name)
+                )
+            # Filter by language
+            if q_language:
+                tutors = tutors.filter(languages__icontains=q_language)
+            # Filter by specialization
+            if q_specialization:
+                tutors = tutors.filter(specializations__icontains=q_specialization)
+
+        return render(request, 'student_dashboard.html', {
+            'user': current_user,
+            'tutors': tutors
+        })
     else:
         # For a tutor, provide both UserForm and TutorProfileForm
         user_form = UserForm(instance=current_user)
@@ -33,7 +62,7 @@ def dashboard(request):
         tutor_form = TutorProfileForm(instance=tutor_profile)
 
         # Fetch lessons for the tutor
-        lessons = Lesson.objects.filter(tutor=tutor_profile).select_related('term', 'student', 'venue')
+        lessons = Lesson.objects.filter(tutor=tutor_profile).select_related('term', 'student__user', 'venue')
 
         # Calculate all upcoming sessions based on frequency
         upcoming_lessons = []
@@ -46,6 +75,7 @@ def dashboard(request):
                         'date': current_date,
                         'time': lesson.start_time,
                         'student': lesson.student.user.full_name,
+                        'email': lesson.student.user.email,  # Fetch email through StudentProfile -> User
                         'venue': lesson.venue.name if lesson.venue else "N/A",
                         'address': lesson.venue.address if lesson.venue else "N/A",
                         'room': lesson.venue.room_number if lesson.venue else "N/A",
@@ -68,6 +98,32 @@ def dashboard(request):
             }
         )
 
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from .models import TutorProfile, LessonRequest
+from .forms import LessonRequestForm
+
+@login_required
+def request_lesson(request, tutor_id):
+    """Handle lesson request form."""
+    tutor = get_object_or_404(TutorProfile, id=tutor_id)  # Fetch the tutor
+    if request.method == 'POST':
+        form = LessonRequestForm(request.POST)
+        if form.is_valid():
+            lesson_request = form.save(commit=False)  # Don't save to the DB yet
+            lesson_request.student = request.user.student_profile  # Assign the student
+            lesson_request.tutor = tutor  # Assign the tutor
+            lesson_request.save()  # Save the lesson request
+            form.save_m2m()  # Save many-to-many fields (if any)
+            return redirect('dashboard')  # Redirect after successful submission
+    else:
+        form = LessonRequestForm()  # Empty form for GET request
+    
+    return render(request, 'request_lesson.html', {
+        'tutor': tutor,
+        'form': form
+    })
 
 @login_prohibited
 def home(request):
