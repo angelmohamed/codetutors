@@ -34,6 +34,47 @@ class LogInForm(forms.Form):
 
 class UserForm(forms.ModelForm):
     """Form to update user profiles."""
+    first_name = forms.CharField(
+        label='First Name',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'First name'
+            }
+        ),
+        required=True
+    )
+    last_name = forms.CharField(
+        label='Last Name',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Last name'
+            }
+        ),
+        required=True
+    )
+    username = forms.CharField(
+        label='Username',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Username'
+            }
+        ),
+        required=True
+    )
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Email'
+            }
+        ),
+        required=True
+    )
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'username', 'email']

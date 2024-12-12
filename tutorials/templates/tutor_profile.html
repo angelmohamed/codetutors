@@ -45,27 +45,27 @@
 
       <!-- Bio field -->
       <div class="mb-3">
-        <textarea class="form-control" name="bio" placeholder="Short biography or background."></textarea>
+        <textarea class="form-control" name="bio" placeholder="Short biography or background.">{{ tutor_profile.bio }}</textarea>
       </div>
 
       <!-- Experience Years field -->
       <div class="mb-3">
-        <input type="number" class="form-control" name="experience_years" placeholder="Number of years tutoring" required>
+        <input type="number" class="form-control" name="experience_years" placeholder="Number of years tutoring" value="{{ tutor_profile.experience_years }}" required>
       </div>
 
       <!-- Contact Number field -->
       <div class="mb-3">
-        <input type="text" class="form-control" name="contact_number" placeholder="Optional contact number" required>
+        <input type="text" class="form-control" name="contact_number" placeholder="Optional contact number" value="{{ tutor_profile.contact_number }}" required>
       </div>
 
       <!-- Languages field -->
       <div class="mb-3">
-        <input type="text" class="form-control" name="languages" placeholder="Programming languages this tutor can teach" required>
+        <input type="text" class="form-control" name="languages" placeholder="Programming languages this tutor can teach" value="{{ tutor_profile.languages }}" required>
       </div>
 
       <!-- Specializations field -->
       <div class="mb-3">
-        <input type="text" class="form-control" name="specializations" placeholder="Advanced topics this tutor can teach" required>
+        <input type="text" class="form-control" name="specializations" placeholder="Advanced topics this tutor can teach" value="{{ tutor_profile.specializations }}" required>
       </div>
 
       <button type="submit" class="btn-custom">Save Changes</button>
