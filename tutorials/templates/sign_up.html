@@ -2,51 +2,48 @@
 {% block content %}
 <style>
   .centered-card {
-    border-radius: 20px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for better appearance */
-    padding: 20px; /* Add some internal spacing */
-    max-width: 500px; /* Adjust the width of the card */
-    width: 100%; /* Ensure it stays responsive */
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
   }
 
-  /* Styling for the input fields */
   .form-control {
-    font-size: 1rem; /* Consistent font size */
-    padding: 10px; /* Add padding inside the input fields */
-    border-radius: 8px; /* Rounded corners */
-    border: 1px solid #ced4da; /* Light border color */
-    transition: border-color 0.3s ease; /* Smooth transition for focus */
-    width: 100%; /* Ensure the input fields take the full width */
+    font-size: 1rem;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.3s ease;
+    width: 100%;
   }
 
   .form-control:focus {
-    border-color: #0d6efd; /* Blue border when focused */
-    box-shadow: 0 0 5px rgba(13, 110, 253, 0.5); /* Light shadow on focus */
+    border-color: #0d6efd;
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
   }
 
-  /* Styling to make buttons the same */
   .btn-custom {
-    font-size: 1rem; /* Consistent font size */
-    width: 100%; /* Make the button take full width of its container */
-    padding: 12px 0; /* Add padding to top and bottom */
-    border-radius: 8px; /* Rounded corners */
-    background-color: #0d6efd; /* Blue color */
-    color: white; /* White text */
-    border: none; /* Remove border */
-    cursor: pointer; /* Pointer on hover */
-    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+    font-size: 1rem;
+    width: 100%;
+    padding: 12px 0;
+    border-radius: 8px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
   }
 
   .btn-custom:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+    background-color: #0056b3;
   }
 
   .login-text {
-    margin-top: 15px; /* Space between button and text */
-    text-align: center; /* Center the text */
+    margin-top: 15px;
+    text-align: center;
   }
 
-  /* Style the link as text (not a button) */
   .login-link {
     color: #0d6efd;
     text-decoration: none;
@@ -57,7 +54,6 @@
     text-decoration: underline;
   }
 
-  /* Styling for the row with first and last name */
   .form-row {
     display: flex;
     justify-content: space-between;
@@ -78,32 +74,62 @@
     <h1 class="mb-4 text-center">Sign up</h1>
     <form action="{% url 'sign_up' %}" method="post">
       {% csrf_token %}
-      
+
+      <!-- Display any non-field errors here -->
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
       <div class="form-row mb-3">
         <div class="col-sm-6">
-          <input type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name" required>
+          {{ form.first_name.errors }}
+          {{ form.first_name }}
         </div>
         <div class="col-sm-6">
-          <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name" required>
+          {{ form.last_name.errors }}
+          {{ form.last_name }}
         </div>
       </div>
-      
+
       <div class="row mb-3">
         <div class="col-sm-12">
-          <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+          {{ form.username.errors }}
+          {{ form.username }}
         </div>
       </div>
+
       <div class="row mb-3">
         <div class="col-sm-12">
-          <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+          {{ form.email.errors }}
+          {{ form.email }}
         </div>
       </div>
+
+      <!-- User type selection -->
       <div class="row mb-3">
         <div class="col-sm-12">
-          <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+          {{ form.user_type.errors }}
+          {{ form.user_type }}
         </div>
       </div>
-      
+
+      <!-- New password and confirm password fields -->
+      <div class="row mb-3">
+        <div class="col-sm-12">
+          {{ form.new_password.errors }}
+          {{ form.new_password }}
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-sm-12">
+          {{ form.confirm_password.errors }}
+          {{ form.confirm_password }}
+        </div>
+      </div>
+
       <div class="text-end">
         <input type="submit" value="Sign up" class="btn-custom">
         <p class="login-text">Already have an account? 

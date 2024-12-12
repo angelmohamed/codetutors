@@ -178,10 +178,11 @@ class SignUpView(LoginProhibitedMixin, FormView):
     redirect_when_logged_in_url = settings.REDIRECT_URL_WHEN_LOGGED_IN
 
     def form_valid(self, form):
+        """Handle valid signup by saving the user and logging them in."""
         self.object = form.save()
         login(self.request, self.object)
-        return super().form_valid(form)
+        return redirect(self.get_success_url())  # Explicitly redirect
 
     def get_success_url(self):
+        """Redirect user to dashboard after signup."""
         return reverse(settings.REDIRECT_URL_WHEN_LOGGED_IN)
-    
