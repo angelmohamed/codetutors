@@ -12,7 +12,11 @@ from tutorials.forms import LogInForm, PasswordForm, UserForm, SignUpForm
 from tutorials.helpers import login_prohibited
 
 from .forms import User, UserForm, TutorProfileForm
-from .models import User, TutorProfile
+from .models import User, TutorProfile, Lesson
+
+from datetime import datetime
+
+from datetime import datetime, timedelta
 
 @login_required
 def dashboard(request):
@@ -23,22 +27,46 @@ def dashboard(request):
     else:
         # For a tutor, provide both UserForm and TutorProfileForm
         user_form = UserForm(instance=current_user)
-        # Ensure tutor_profile exists
         tutor_profile = getattr(current_user, 'tutor_profile', None)
         if not tutor_profile:
             tutor_profile = TutorProfile.objects.create(user=current_user)
-
         tutor_form = TutorProfileForm(instance=tutor_profile)
+
+        # Fetch lessons for the tutor
+        lessons = Lesson.objects.filter(tutor=tutor_profile).select_related('term', 'student', 'venue')
+
+        # Calculate all upcoming sessions based on frequency
+        upcoming_lessons = []
+        today = datetime.now().date()
+        for lesson in lessons:
+            current_date = lesson.start_date
+            while current_date <= lesson.term.end_date:
+                if current_date >= today:  # Only include future lessons
+                    upcoming_lessons.append({
+                        'date': current_date,
+                        'time': lesson.start_time,
+                        'student': lesson.student.user.full_name,
+                        'venue': lesson.venue.name if lesson.venue else "N/A",
+                        'address': lesson.venue.address if lesson.venue else "N/A",
+                        'room': lesson.venue.room_number if lesson.venue else "N/A",
+                    })
+                # Increment date based on frequency
+                increment = timedelta(weeks=2) if lesson.frequency == 'fortnightly' else timedelta(weeks=1)
+                current_date += increment
+
+        # Sort all lessons by date and time
+        upcoming_lessons = sorted(upcoming_lessons, key=lambda x: (x['date'], x['time']))
+
         return render(
-            request, 
-            'tutor_dashboard.html', 
+            request,
+            'tutor_dashboard.html',
             {
                 'user': current_user,
                 'form': user_form,
-                'tutor_form': tutor_form
+                'tutor_form': tutor_form,
+                'upcoming_lessons': upcoming_lessons
             }
         )
-
 
 
 @login_prohibited

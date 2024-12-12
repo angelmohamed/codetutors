@@ -1,9 +1,94 @@
 {% extends 'base_content.html' %}
 {% block content %}
 <div class="container">
-  <div class="row">
-    <div class="col-12">
-      <h1>Welcome to your student dashboard {{ user.username }}</h1>
+  <h1 class="text-center">Welcome, Student {{ user.username }}</h1>
+  <p class="text-center">This is your student dashboard. Manage your lessons, schedule, and more here.</p>
+  
+  <div class="text-center mb-4">
+    <a href="{% url 'log_out' %}" class="btn btn-danger">Log Out</a>
+  </div>
+
+  <!-- Nav Tabs for Dashboard Sections -->
+  <ul class="nav nav-tabs" id="tutorDashboardTab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Overview</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Edit Profile</a>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="tutorDashboardTabContent">
+    <!-- Overview Tab Pane -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+      <h2>Your Lessons</h2>
+      <p>Here you can see a summary of your upcoming lessons, recent changes, and other relevant information.</p>
+    
+      {% if upcoming_lessons %}
+        <h3>Upcoming Lessons</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Student</th>
+              <th>Venue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lesson in upcoming_lessons %}
+              <tr>
+                <td>{{ lesson.start_date }}</td>
+                <td>{{ lesson.start_time }}</td>
+                <td>{{ lesson.student.user.full_name }}</td>
+                <td>{{ lesson.venue.name }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No upcoming lessons at the moment.</p>
+      {% endif %}
+    </div>
+    
+
+    <!-- Edit Profile Tab Pane -->
+    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+      <h2>Update Your Profile</h2>
+      <h3>User Details</h3>
+      <form method="post" action="{% url 'profile' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="first_name" class="form-label">First Name</label>
+          <input type="text" class="form-control" name="first_name" placeholder="First Name" value="{{ user.first_name }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="first_name" class="form-label">Last Name</label>
+          <input type="text" class="form-control" name="last_name" placeholder="Last Name" value="{{ user.last_name }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="first_name" class="form-label">Username</label>
+          <input type="text" class="form-control" name="username" placeholder="Username" value="{{ user.username }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="first_name" class="form-label">Email</label>
+          <input type="email" class="form-control" name="email" placeholder="Email" value="{{ user.email }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save User Details</button>
+      </form>
+
+      <hr>
+
+      <h3>Tutor Profile Details</h3>
+      {% if tutor_form %}
+        <form method="post" action="{% url 'tutor_profile' %}">
+          {% csrf_token %}
+          {{ tutor_form.as_p }}
+          <button type="submit" class="btn btn-primary">Save Tutor Profile</button>
+        </form>
+      {% else %}
+        <p>No tutor form available. Please configure your view to pass a TutorProfileForm instance.</p>
+      {% endif %}
     </div>
   </div>
 </div>

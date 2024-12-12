@@ -18,13 +18,42 @@
     </li>
   </ul>
 
-  <div class="tab-content mt-3" id="tutorDashboardTabContent">
-    <!-- Overview Tab Pane -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-      <h2>Your Lessons</h2>
-      <p>Here you can see a summary of your upcoming lessons, recent changes, and other relevant information.</p>
-      <!-- Additional overview content here -->
-    </div>
+  <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+    <h2>Your Lessons</h2>
+    <p>Here you can see a summary of your upcoming lessons, including all sessions based on their frequency.</p>
+  
+    {% if upcoming_lessons %}
+      <h3>Upcoming Lessons</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Student</th>
+            <th>Venue</th>
+            <th>Address</th>
+            <th>Room</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lesson in upcoming_lessons %}
+            <tr>
+              <td>{{ lesson.date }}</td>
+              <td>{{ lesson.time }}</td>
+              <td>{{ lesson.student }}</td>
+              <td>{{ lesson.venue }}</td>
+              <td>{{ lesson.address }}</td>
+              <td>{{ lesson.room }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No upcoming lessons at the moment.</p>
+    {% endif %}
+  </div>
+  
+    
 
     <!-- Edit Profile Tab Pane -->
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
@@ -37,15 +66,15 @@
           <input type="text" class="form-control" name="first_name" placeholder="First Name" value="{{ user.first_name }}" required>
         </div>
         <div class="mb-3">
-          <label for="first_name" class="form-label">Last Name</label>
+          <label for="last_name" class="form-label">Last Name</label>
           <input type="text" class="form-control" name="last_name" placeholder="Last Name" value="{{ user.last_name }}" required>
         </div>
         <div class="mb-3">
-          <label for="first_name" class="form-label">Username</label>
+          <label for="username" class="form-label">Username</label>
           <input type="text" class="form-control" name="username" placeholder="Username" value="{{ user.username }}" required>
         </div>
         <div class="mb-3">
-          <label for="first_name" class="form-label">Email</label>
+          <label for="email" class="form-label">Email</label>
           <input type="email" class="form-control" name="email" placeholder="Email" value="{{ user.email }}" required>
         </div>
         <button type="submit" class="btn btn-primary">Save User Details</button>
