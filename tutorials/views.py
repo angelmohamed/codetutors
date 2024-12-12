@@ -83,7 +83,7 @@ class LogInView(LoginProhibitedMixin, View):
         else:
             messages.add_message(request, messages.ERROR, "Invalid input. Please correct the errors below.")
             
-        return self.render(request, 'log_in.html', {'form': form, 'next': self.next})
+        return render(request, 'log_in.html', {'form': form, 'next': self.next})
 
     def render(self):
         """Render log in template with the given context."""
@@ -107,7 +107,7 @@ def tutor_log_in(request):
             return redirect('dashboard')  # Redirect to tutor dashboard
         else:
             messages.error(request, "Invalid credentials or you are not a tutor.")
-    return  render(request, 'log_in.html', {'form': form})
+    return render(request, 'log_in.html', {'form': form})
 
 
 

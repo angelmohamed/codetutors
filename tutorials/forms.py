@@ -141,6 +141,8 @@ class SignUpForm(forms.ModelForm):
         is_student = True if user_type == 'student' else False
         is_tutor = not is_student 
 
+        print(user_type, is_student, is_tutor)
+
         user = User.objects.create_user(
             username=self.cleaned_data.get('username'),
             first_name=self.cleaned_data.get('first_name'),
