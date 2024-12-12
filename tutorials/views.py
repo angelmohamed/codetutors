@@ -107,7 +107,7 @@ def tutor_log_in(request):
             return redirect('dashboard')  # Redirect to tutor dashboard
         else:
             messages.error(request, "Invalid credentials or you are not a tutor.")
-    return render(request, 'log_in.html', {'form': form})
+    return  render(request, 'log_in.html', {'form': form})
 
 
 
