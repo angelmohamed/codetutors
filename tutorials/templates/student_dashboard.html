@@ -30,18 +30,67 @@
          aria-selected="{% if request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}true{% else %}false{% endif %}">
         Search Tutors
       </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" 
+         id="invoices-tab" 
+         data-bs-toggle="tab" 
+         href="#invoices" 
+         role="tab" 
+         aria-controls="invoices" 
+         aria-selected="false">
+        Invoices
+      </a>
     </li> 
   </ul>
 
   <div class="tab-content mt-3" id="studentDashboardTabContent">
+    <!-- Overview Tab Pane -->
     <div class="tab-pane fade {% if not request.GET.q_name and not request.GET.q_language and not request.GET.q_specialization %}show active{% endif %}" 
          id="overview" 
          role="tabpanel" 
          aria-labelledby="overview-tab">
       <h2>Your Lessons</h2>
-      <p>This is where you'd show an overview for the student (e.g., upcoming lessons, invoices, etc.).</p>
+      <p>Here you can see a summary of your upcoming lessons, including all sessions based on their frequency.</p>
+      
+      {% if upcoming_lessons %}
+        <h3>Upcoming Lessons</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Tutor</th>
+              <th>Venue</th>
+              <th>Address</th>
+              <th>Room</th>
+              <th>Frequency</th>
+              <th>Duration (mins)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lesson in upcoming_lessons %}
+              <tr>
+                <td>{{ lesson.date }}</td>
+                <td>{{ lesson.time }}</td>
+                <td>
+                  <span title="Email: {{ lesson.tutor_email }}">{{ lesson.tutor }}</span>
+                </td>
+                <td>{{ lesson.venue }}</td>
+                <td>{{ lesson.address }}</td>
+                <td>{{ lesson.room }}</td>
+                <td>{{ lesson.frequency }}</td>
+                <td>{{ lesson.duration }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No upcoming lessons at the moment.</p>
+      {% endif %}
     </div>
 
+    <!-- Search Tutors Tab Pane -->
     <div class="tab-pane fade {% if request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}show active{% endif %}" 
          id="search" 
          role="tabpanel" 
@@ -94,6 +143,40 @@
         </table>
       {% elif request.GET.q_name or request.GET.q_language or request.GET.q_specialization %}
         <p class="mt-4">No tutors found matching your criteria.</p>
+      {% endif %}
+    </div>
+
+    <!-- Invoices Tab Pane -->
+    <div class="tab-pane fade" 
+         id="invoices" 
+         role="tabpanel" 
+         aria-labelledby="invoices-tab">
+      <h2>Your Invoices</h2>
+      {% if invoices %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>Amount</th>
+              <th>Issued Date</th>
+              <th>Paid Date</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for invoice in invoices %}
+              <tr>
+                <td>{{ invoice.term.name }}</td>
+                <td>{{ invoice.amount }}</td>
+                <td>{{ invoice.issued_date }}</td>
+                <td>{{ invoice.paid_date|default:"Not Paid" }}</td>
+                <td>{{ invoice.notes }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No invoices found.</p>
       {% endif %}
     </div>
   </div>

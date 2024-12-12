@@ -19,39 +19,67 @@ from datetime import datetime
 
 from datetime import datetime, timedelta
 
-
 @login_required
 def dashboard(request):
     """Display the current user's dashboard."""
     current_user = request.user
     if current_user.is_student:
-        # Extract query parameters if present
+        # Extract query parameters for tutor search
         q_name = request.GET.get('q_name', '').strip()
         q_language = request.GET.get('q_language', '').strip()
         q_specialization = request.GET.get('q_specialization', '').strip()
 
         tutors = None
-        # If any search param is provided, perform a search
         if q_name or q_language or q_specialization:
             tutors = TutorProfile.objects.select_related('user')
-
-            # Filter by name (first_name or last_name)
             if q_name:
                 tutors = tutors.filter(
                     Q(user__first_name__icontains=q_name) |
                     Q(user__last_name__icontains=q_name) |
                     Q(user__username__icontains=q_name)
                 )
-            # Filter by language
             if q_language:
                 tutors = tutors.filter(languages__icontains=q_language)
-            # Filter by specialization
             if q_specialization:
                 tutors = tutors.filter(specializations__icontains=q_specialization)
 
+        # Retrieve the student's invoices
+        invoices = current_user.student_profile.invoices.select_related('term').all()
+
+        # Fetch lessons for the student
+        # Filter by student and select related fields for convenience
+        lessons = Lesson.objects.filter(student=current_user.student_profile).select_related('term', 'tutor__user', 'venue')
+
+        # Calculate all upcoming sessions based on frequency (similar to tutor logic)
+        upcoming_lessons = []
+        today = datetime.now().date()
+        for lesson in lessons:
+            current_date = lesson.start_date
+            while current_date <= lesson.term.end_date:
+                if current_date >= today:  # Only future lessons
+                    upcoming_lessons.append({
+                        'date': current_date,
+                        'time': lesson.start_time,
+                        'tutor': lesson.tutor.user.full_name,
+                        'tutor_email': lesson.tutor.user.email,
+                        'venue': lesson.venue.name if lesson.venue else "N/A",
+                        'address': lesson.venue.address if lesson.venue else "N/A",
+                        'room': lesson.venue.room_number if lesson.venue else "N/A",
+                        'frequency': lesson.frequency,
+                        'duration': lesson.duration_minutes,
+                    })
+                # Increment date based on frequency
+                increment = timedelta(weeks=2) if lesson.frequency == 'fortnightly' else timedelta(weeks=1)
+                current_date += increment
+
+        # Sort all lessons by date and time
+        upcoming_lessons = sorted(upcoming_lessons, key=lambda x: (x['date'], x['time']))
+
         return render(request, 'student_dashboard.html', {
             'user': current_user,
-            'tutors': tutors
+            'tutors': tutors,
+            'invoices': invoices,
+            'upcoming_lessons': upcoming_lessons
         })
     else:
         # For a tutor, provide both UserForm and TutorProfileForm
