@@ -13,7 +13,7 @@ from tutorials.forms import LogInForm, PasswordForm, UserForm, SignUpForm
 from tutorials.helpers import login_prohibited
 
 from .forms import User, UserForm, TutorProfileForm, LessonRequestForm
-from .models import User, TutorProfile, Lesson, TutorProfile, LessonRequest
+from .models import User, TutorProfile, Lesson
 
 from datetime import datetime
 
