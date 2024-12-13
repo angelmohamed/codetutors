@@ -18,46 +18,46 @@
     </li>
   </ul>
 
-  <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-    <h2>Your Lessons</h2>
-    <p>Here you can see a summary of your upcoming lessons, including all sessions based on their frequency.</p>
-  
-    {% if upcoming_lessons %}
-      <h3>Upcoming Lessons</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Student</th>
-            <th>Venue</th>
-            <th>Address</th>
-            <th>Room</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for lesson in upcoming_lessons %}
+  <!-- Tab Content -->
+  <div class="tab-content mt-3">
+    <!-- Overview Tab Pane -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+      <h2>Your Lessons</h2>
+      <p>Here you can see a summary of your upcoming lessons, including all sessions based on their frequency.</p>
+      
+      {% if upcoming_lessons %}
+        <h3>Upcoming Lessons</h3>
+        <table class="table">
+          <thead>
             <tr>
-              <td>{{ lesson.date }}</td>
-              <td>{{ lesson.time }}</td>
-              <td>
-                <span title="Email: {{ lesson.email }}">{{ lesson.student }}</span>
-              </td>
-              <td>{{ lesson.venue }}</td>
-              <td>{{ lesson.address }}</td>
-              <td>{{ lesson.room }}</td>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Student</th>
+              <th>Venue</th>
+              <th>Address</th>
+              <th>Room</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>No upcoming lessons at the moment.</p>
-    {% endif %}
-  </div>
-  
-  
+          </thead>
+          <tbody>
+            {% for lesson in upcoming_lessons %}
+              <tr>
+                <td>{{ lesson.date }}</td>
+                <td>{{ lesson.time }}</td>
+                <td>
+                  <span title="Email: {{ lesson.email }}">{{ lesson.student }}</span>
+                </td>
+                <td>{{ lesson.venue }}</td>
+                <td>{{ lesson.address }}</td>
+                <td>{{ lesson.room }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No upcoming lessons at the moment.</p>
+      {% endif %}
+    </div>
     
-
     <!-- Edit Profile Tab Pane -->
     <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
       <h2>Update Your Profile</h2>

@@ -5,15 +5,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views import View
 from django.views.generic.edit import FormView, UpdateView
 from django.urls import reverse
 from tutorials.forms import LogInForm, PasswordForm, UserForm, SignUpForm
 from tutorials.helpers import login_prohibited
 
-from .forms import User, UserForm, TutorProfileForm
-from .models import User, TutorProfile, Lesson
+from .forms import User, UserForm, TutorProfileForm, LessonRequestForm
+from .models import User, TutorProfile, Lesson, TutorProfile, LessonRequest
 
 from datetime import datetime
 
@@ -56,7 +56,7 @@ def dashboard(request):
         for lesson in lessons:
             current_date = lesson.start_date
             while current_date <= lesson.term.end_date:
-                if current_date >= today:  # Only future lessons
+                if current_date >= lesson.term.start_date:
                     upcoming_lessons.append({
                         'date': current_date,
                         'time': lesson.start_time,
@@ -98,7 +98,7 @@ def dashboard(request):
         for lesson in lessons:
             current_date = lesson.start_date
             while current_date <= lesson.term.end_date:
-                if current_date >= today:  # Only include future lessons
+                if current_date >= lesson.term.start_date:
                     upcoming_lessons.append({
                         'date': current_date,
                         'time': lesson.start_time,
@@ -125,12 +125,6 @@ def dashboard(request):
                 'upcoming_lessons': upcoming_lessons
             }
         )
-
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-from .models import TutorProfile, LessonRequest
-from .forms import LessonRequestForm
 
 @login_required
 def request_lesson(request, tutor_id):

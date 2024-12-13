@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group, Permission
+from django.db.models import Q
 
 from .models import (
     User,
@@ -17,7 +19,7 @@ from .models import (
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     list_filter = ('is_staff', 'is_active', 'is_superuser')
     ordering = ('last_name', 'first_name', 'username')
@@ -31,6 +33,18 @@ class CustomUserAdmin(UserAdmin):
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
 
+    def save_model(self, request, obj, form, change):
+        """
+        Automatically assign model permissions to staff members if they are staff but not superusers.
+        """
+        super().save_model(request, obj, form, change)
+        if obj.is_staff and not obj.is_superuser:
+            from django.contrib.auth.models import Permission
+            from django.contrib.contenttypes.models import ContentType
+
+            tutorials_permissions = Permission.objects.filter(content_type__app_label='tutorials')
+            obj.user_permissions.set(tutorials_permissions)
+            obj.save()
 
 @admin.register(ProgrammingLanguage)
 class ProgrammingLanguageAdmin(admin.ModelAdmin):
