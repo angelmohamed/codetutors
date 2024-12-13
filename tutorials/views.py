@@ -12,6 +12,7 @@ from django.urls import reverse
 from tutorials.forms import LogInForm, PasswordForm, UserForm, SignUpForm
 from tutorials.helpers import login_prohibited
 from django.views.generic import ListView
+from .models import Notification
 
 
 from .forms import User, UserForm, TutorProfileForm
@@ -320,3 +321,19 @@ class InvoiceView(LoginRequiredMixin, ListView):
         context['total_due'] = sum(invoice.amount_due for invoice in context['invoices'])
         return context
 
+
+class NotificationsView(LoginRequiredMixin, ListView):
+    """Display notifications for the current logged-in user."""
+    model = Notification
+    template_name = "notifications.html"
+    context_object_name = 'notifications'
+
+    def get_queryset(self):
+        """Return the notifications for the current logged-in user."""
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        """Add additional context like the number of unread notifications."""
+        context = super().get_context_data(**kwargs)
+        context['unread_count'] = Notification.objects.filter(user=self.request.user, is_read=False).count()
+        return context
