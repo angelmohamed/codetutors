@@ -2,7 +2,7 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from libgravatar import Gravatar
-
+from django.utils.timezone import now
 from django.conf import settings
 
 class User(AbstractUser):
@@ -317,3 +317,36 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"Invoice for {self.student.user.full_name()} - {self.term.name}"
+
+
+class Notification(models.Model):
+    """
+    Represents a notification for a user's notification, 
+     users can be informed of new invoices, 
+    lesson updates, or other important messages.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        help_text="The user this notification is for."
+    )
+    message = models.TextField(help_text="The content of the notification.")
+    created_at = models.DateTimeField(auto_now_add=True, help_text="The timestamp when the notification was created.")
+    is_read = models.BooleanField(default=False, help_text="Whether the user has read this notification.")
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.full_name()} - {'Read' if self.is_read else 'Unread'}"
+
+    def mark_as_read(self):
+        """Mark this notification as read."""
+        self.is_read = True
+        self.save()
+
+    def mark_as_unread(self):
+        """Mark this notification as unread."""
+        self.is_read = False
+        self.save()
