@@ -43,28 +43,6 @@ class User(AbstractUser):
         """Return a URL to a miniature version of the user's gravatar."""
         
         return self.gravatar(size=60)
-    
-class Specialization(models.Model):
-    """
-    A more advanced specialization area a tutor can teach,
-    e.g. 'Ruby on Rails Web Development', 'React.js Front-End', etc.
-    """
-    name = models.CharField(max_length=100, unique=True)
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-class ProgrammingLanguage(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    
-    class Meta:
-        ordering = ['name']
-    
-    def __str__(self):
-        return self.name
 
 
 class TutorProfile(models.Model):

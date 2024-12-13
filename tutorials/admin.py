@@ -5,8 +5,6 @@ from django.db.models import Q
 
 from .models import (
     User,
-    ProgrammingLanguage,
-    Specialization,
     TutorProfile,
     StudentProfile,
     Term,
@@ -46,16 +44,6 @@ class CustomUserAdmin(UserAdmin):
             obj.user_permissions.set(tutorials_permissions)
             obj.save()
 
-@admin.register(ProgrammingLanguage)
-class ProgrammingLanguageAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
-
-
-@admin.register(Specialization)
-class SpecializationAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
 
 
 @admin.register(TutorProfile)
