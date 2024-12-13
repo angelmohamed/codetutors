@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+</head>
+<body>
+    <h1>Invoice for {{ student.name }}</h1>
+    <p><strong>Term:</strong> {{ term.name }}</p>
+    <p><strong>Invoice Number:</strong> {{ invoice.number }}</p>
+    <p><strong>Total Amount:</strong> £{{ invoice.total_amount }}</p>
+    <p><strong>Status:</strong> {{ invoice.status }}</p>
+
+    <h3>Lesson Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Tutor</th>
+                <th>Lesson Date</th>
+                <th>Duration</th>
+                <th>Venue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lesson in invoice.lessons %}
+            <tr>
+                <td>{{ lesson.tutor.name }}</td>
+                <td>{{ lesson.date }}</td>
+                <td>{{ lesson.duration }} hours</td>
+                <td>{{ lesson.venue }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Payment Information</h3>
+    <p>Please make your payment by bank transfer before the first lesson.</p>
+    <p><strong>Bank Details:</strong></p>
+    <p>Bank Name: XYZ Bank</p>
+    <p>Account Number: 12345678</p>
+    <p>Sort Code: 12-34-56</p>
+</body>
+</html>

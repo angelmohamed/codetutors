@@ -11,9 +11,11 @@ from django.views.generic.edit import FormView, UpdateView
 from django.urls import reverse
 from tutorials.forms import LogInForm, PasswordForm, UserForm, SignUpForm
 from tutorials.helpers import login_prohibited
+from django.views.generic import ListView
+
 
 from .forms import User, UserForm, TutorProfileForm
-from .models import User, TutorProfile, Lesson
+from .models import Invoice, User, TutorProfile, Lesson
 
 from datetime import datetime
 
@@ -224,31 +226,7 @@ def log_out(request):
     logout(request)
     return redirect('home')
 
-def tutor_log_in(request):
-    """Handle login for tutors."""
-    form = LogInForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        user = form.get_user()
-        if user and user.is_tutor:  # Ensure the user is a tutor
-            login(request, user)
-            return redirect('dashboard')  # Redirect to tutor dashboard
-        else:
-            messages.error(request, "Invalid credentials or you are not a tutor.")
-    return render(request, 'log_in.html', {'form': form})
 
-
-
-def student_log_in(request):
-    """Handle login for students."""
-    form = LogInForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        user = form.get_user()
-        if user and user.is_student:
-            login(request, user)
-            return redirect('dashboard')  # Redirect to student dashboard
-        else:
-            messages.error(request, "Invalid credentials or you are not a student.")
-    return render(request, 'log_in.html', {'form': form})
 
 
 
@@ -322,3 +300,23 @@ class SignUpView(LoginProhibitedMixin, FormView):
     def get_success_url(self):
         """Redirect user to dashboard after signup."""
         return reverse(settings.REDIRECT_URL_WHEN_LOGGED_IN)
+    
+
+class InvoiceView(LoginRequiredMixin, ListView):
+    """Display invoices for the current user (student)."""
+    model = Invoice
+    template_name = "invoices.html"
+    context_object_name = 'invoices'
+
+    def get_queryset(self):
+        """Return the invoices for the current logged-in student's profile."""
+        return Invoice.objects.filter(student=self.request.user.student_profile).select_related('term')
+
+    def get_context_data(self, **kwargs):
+        """Add additional context such as the student's name and total due amount."""
+        context = super().get_context_data(**kwargs)
+        student_profile = self.request.user.student_profile
+        context['student_name'] = student_profile.user.full_name
+        context['total_due'] = sum(invoice.amount_due for invoice in context['invoices'])
+        return context
+
