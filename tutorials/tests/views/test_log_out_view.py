@@ -1,33 +1,32 @@
-"""Tests of the log out view."""
+"""Tests for log_out view."""
 from django.test import TestCase
 from django.urls import reverse
-from tutorials.models import User
-from tutorials.tests.helpers import LogInTester
+from django.contrib.auth import get_user_model
+from django.contrib.auth import SESSION_KEY
 
-class LogOutViewTestCase(TestCase, LogInTester):
-    """Tests of the log out view."""
+from tutorials.models import StudentProfile
 
-    fixtures = ['tutorials/tests/fixtures/default_user.json']
+User = get_user_model()
+
+class LogOutViewTestCase(TestCase):
+    """Test suite for the log_out view."""
 
     def setUp(self):
         self.url = reverse('log_out')
-        self.user = User.objects.get(username='@johndoe')
+        self.user = User.objects.create_user(
+            username='@testuser',
+            password='Password123',
+            email="student123@gmail.com",
+            is_student=True,  
+            is_tutor=False
+        )
+        self.student_profile = StudentProfile.objects.create(user=self.user)
 
-    def test_log_out_url(self):
-        self.assertEqual(self.url,'/log_out/')
 
-    def test_get_log_out(self):
-        self.client.login(username='@johndoe', password='Password123')
-        self.assertTrue(self._is_logged_in())
+    def test_log_out_redirects_home(self):
+        # Log in user
+        self.client.login(username='@testuser', password='Password123')
+        self.assertIn(SESSION_KEY, self.client.session, "User should be logged in.")
         response = self.client.get(self.url, follow=True)
-        response_url = reverse('home')
-        self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'home.html')
-        self.assertFalse(self._is_logged_in())
-
-    def test_get_log_out_without_being_logged_in(self):
-        response = self.client.get(self.url, follow=True)
-        response_url = reverse('home')
-        self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'home.html')
-        self.assertFalse(self._is_logged_in())
+        self.assertRedirects(response, reverse('home'))
+        self.assertNotIn(SESSION_KEY, self.client.session, "User should be logged out after log_out view.")

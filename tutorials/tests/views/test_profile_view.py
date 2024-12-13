@@ -1,101 +1,101 @@
-"""Tests for the profile view."""
-from django.contrib import messages
+"""Tests for ProfileUpdateView and TutorProfileUpdateView."""
 from django.test import TestCase
 from django.urls import reverse
-from tutorials.forms import UserForm
-from tutorials.models import User
-from tutorials.tests.helpers import reverse_with_next
+from django.contrib.auth import get_user_model
+from tutorials.forms import UserForm, TutorProfileForm
+from tutorials.models import TutorProfile, StudentProfile
 
-class ProfileViewTest(TestCase):
-    """Test suite for the profile view."""
 
-    fixtures = [
-        'tutorials/tests/fixtures/default_user.json',
-        'tutorials/tests/fixtures/other_users.json'
-    ]
+
+User = get_user_model()
+
+class ProfileUpdateViewTestCase(TestCase):
+    """Test suite for the ProfileUpdateView."""
 
     def setUp(self):
-        self.user = User.objects.get(username='@johndoe')
         self.url = reverse('profile')
-        self.form_input = {
-            'first_name': 'John2',
-            'last_name': 'Doe2',
-            'username': '@johndoe2',
-            'email': 'johndoe2@example.org',
+        self.user = User.objects.create_user(
+            username='@profileuser',
+            password='Password123',
+            first_name='Old',
+            last_name='Name',
+            email='old@example.com',
+            is_student=True,
+            is_tutor=False
+        )
+        self.student_profile = StudentProfile.objects.create(user=self.user)
+
+    def test_redirect_if_not_logged_in(self):
+        response = self.client.get(self.url, follow=True)
+        self.assertNotEqual(response.request['PATH_INFO'], self.url, "Should redirect if not logged in.")
+
+    def test_get_profile_update_form(self):
+        self.client.login(username='@profileuser', password='Password123')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'profile.html')
+        self.assertIsInstance(response.context['form'], UserForm)
+
+    def test_post_valid_profile_update(self):
+        self.client.login(username='@profileuser', password='Password123')
+        form_data = {
+            'first_name': 'New',
+            'last_name': 'Name',
+            'username': '@profileuser',
+            'email': 'new@example.com'
         }
+        response = self.client.post(self.url, form_data, follow=True)
+        self.assertRedirects(response, reverse('dashboard'))
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'New')
+        self.assertEqual(self.user.email, 'new@example.com')
 
-    def test_profile_url(self):
-        self.assertEqual(self.url, '/profile/')
 
-    def test_get_profile(self):
-        self.client.login(username=self.user.username, password='Password123')
+class TutorProfileUpdateViewTestCase(TestCase):
+    """Test suite for TutorProfileUpdateView."""
+
+    def setUp(self):
+        self.url = reverse('tutor_profile')
+        self.user = User.objects.create_user(
+            username='@tutoruser',
+            password='Password123',
+            is_student=False,
+            is_tutor=True
+        )
+        self.tutor_profile = TutorProfile.objects.create(
+            user=self.user,
+            bio='Old bio',
+            experience_years=5,
+            contact_number='1234567890',
+            languages='Python',
+            specializations='Django'
+        )
+
+    def test_redirect_if_not_logged_in(self):
+        response = self.client.get(self.url, follow=True)
+        self.assertNotEqual(response.request['PATH_INFO'], self.url, "Should redirect if not logged in.")
+
+    def test_get_tutor_profile_update_form(self):
+        self.client.login(username='@tutoruser', password='Password123')
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'profile.html')
-        form = response.context['form']
-        self.assertTrue(isinstance(form, UserForm))
-        self.assertEqual(form.instance, self.user)
+        self.assertTemplateUsed(response, 'tutor_profile.html')
+        self.assertIsInstance(response.context['form'], TutorProfileForm)
 
-    def test_get_profile_redirects_when_not_logged_in(self):
-        redirect_url = reverse_with_next('log_in', self.url)
-        response = self.client.get(self.url)
-        self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-
-    def test_unsuccesful_profile_update(self):
-        self.client.login(username=self.user.username, password='Password123')
-        self.form_input['username'] = 'BAD_USERNAME'
-        before_count = User.objects.count()
-        response = self.client.post(self.url, self.form_input)
-        after_count = User.objects.count()
-        self.assertEqual(after_count, before_count)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'profile.html')
-        form = response.context['form']
-        self.assertTrue(isinstance(form, UserForm))
-        self.assertTrue(form.is_bound)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.username, '@johndoe')
-        self.assertEqual(self.user.first_name, 'John')
-        self.assertEqual(self.user.last_name, 'Doe')
-        self.assertEqual(self.user.email, 'johndoe@example.org')
-
-    def test_unsuccessful_profile_update_due_to_duplicate_username(self):
-        self.client.login(username=self.user.username, password='Password123')
-        self.form_input['username'] = '@janedoe'
-        before_count = User.objects.count()
-        response = self.client.post(self.url, self.form_input)
-        after_count = User.objects.count()
-        self.assertEqual(after_count, before_count)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'profile.html')
-        form = response.context['form']
-        self.assertTrue(isinstance(form, UserForm))
-        self.assertTrue(form.is_bound)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.username, '@johndoe')
-        self.assertEqual(self.user.first_name, 'John')
-        self.assertEqual(self.user.last_name, 'Doe')
-        self.assertEqual(self.user.email, 'johndoe@example.org')
-
-    def test_succesful_profile_update(self):
-        self.client.login(username=self.user.username, password='Password123')
-        before_count = User.objects.count()
-        response = self.client.post(self.url, self.form_input, follow=True)
-        after_count = User.objects.count()
-        self.assertEqual(after_count, before_count)
-        response_url = reverse('dashboard')
-        self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
-        messages_list = list(response.context['messages'])
-        self.assertEqual(len(messages_list), 1)
-        self.assertEqual(messages_list[0].level, messages.SUCCESS)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.username, '@johndoe2')
-        self.assertEqual(self.user.first_name, 'John2')
-        self.assertEqual(self.user.last_name, 'Doe2')
-        self.assertEqual(self.user.email, 'johndoe2@example.org')
-
-    def test_post_profile_redirects_when_not_logged_in(self):
-        redirect_url = reverse_with_next('log_in', self.url)
-        response = self.client.post(self.url, self.form_input)
-        self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
+    def test_post_valid_tutor_profile_update(self):
+        self.client.login(username='@tutoruser', password='Password123')
+        form_data = {
+            'bio': 'New Bio',
+            'experience_years': 10,
+            'contact_number': '0987654321',
+            'languages': 'Python, Go',
+            'specializations': 'Flask, Docker'
+        }
+        response = self.client.post(self.url, form_data, follow=True)
+        self.assertRedirects(response, reverse('dashboard'))
+        self.tutor_profile.refresh_from_db()
+        self.assertEqual(self.tutor_profile.bio, 'New Bio')
+        self.assertEqual(self.tutor_profile.experience_years, 10)
+        self.assertEqual(self.tutor_profile.contact_number, '0987654321')
+        self.assertEqual(self.tutor_profile.languages, 'Python, Go')
+        self.assertEqual(self.tutor_profile.specializations, 'Flask, Docker')

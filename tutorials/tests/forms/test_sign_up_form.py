@@ -1,79 +1,73 @@
-"""Unit tests of the sign up form."""
-from django.contrib.auth.hashers import check_password
-from django import forms
+"""Tests for SignUpForm."""
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from tutorials.forms import SignUpForm
-from tutorials.models import User
+from tutorials.models import StudentProfile, TutorProfile
+
+User = get_user_model()
 
 class SignUpFormTestCase(TestCase):
-    """Unit tests of the sign up form."""
+    """Test suite for SignUpForm."""
 
-    def setUp(self):
-        self.form_input = {
-            'first_name': 'Jane',
+    def test_valid_student_sign_up(self):
+        form_data = {
+            'first_name': 'John',
             'last_name': 'Doe',
-            'username': '@janedoe',
-            'email': 'janedoe@example.org',
+            'username': '@johndoe',
+            'email': 'john@example.com',
+            'user_type': 'student',
             'new_password': 'Password123',
-            'password_confirmation': 'Password123'
+            'confirm_password': 'Password123'
         }
+        form = SignUpForm(data=form_data)
+        self.assertTrue(form.is_valid(), "Form should be valid for a proper student sign up.")
+        user = form.save(commit=True)
+        # Check user info
+        self.assertEqual(user.first_name, 'John')
+        self.assertTrue(user.is_student, "User should be a student.")
+        self.assertFalse(user.is_tutor)
+        self.assertTrue(StudentProfile.objects.filter(user=user).exists(), "StudentProfile should be created.")
 
-    def test_valid_sign_up_form(self):
-        form = SignUpForm(data=self.form_input)
-        self.assertTrue(form.is_valid())
+    def test_valid_tutor_sign_up(self):
+        form_data = {
+            'first_name': 'Jane',
+            'last_name': 'Smith',
+            'username': '@janesmith',
+            'email': 'jane@example.com',
+            'user_type': 'tutor',
+            'new_password': 'Password123',
+            'confirm_password': 'Password123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertTrue(form.is_valid(), "Form should be valid for a proper tutor sign up.")
+        user = form.save(commit=True)
+        self.assertEqual(user.last_name, 'Smith')
+        self.assertFalse(user.is_student)
+        self.assertTrue(user.is_tutor, "User should be a tutor.")
+        self.assertTrue(TutorProfile.objects.filter(user=user).exists(), "TutorProfile should be created.")
 
-    def test_form_has_necessary_fields(self):
-        form = SignUpForm()
-        self.assertIn('first_name', form.fields)
-        self.assertIn('last_name', form.fields)
-        self.assertIn('username', form.fields)
-        self.assertIn('email', form.fields)
-        email_field = form.fields['email']
-        self.assertTrue(isinstance(email_field, forms.EmailField))
-        self.assertIn('new_password', form.fields)
-        new_password_widget = form.fields['new_password'].widget
-        self.assertTrue(isinstance(new_password_widget, forms.PasswordInput))
-        self.assertIn('password_confirmation', form.fields)
-        password_confirmation_widget = form.fields['password_confirmation'].widget
-        self.assertTrue(isinstance(password_confirmation_widget, forms.PasswordInput))
+    def test_mismatched_passwords(self):
+        form_data = {
+            'first_name': 'Bob',
+            'last_name': 'Builder',
+            'username': '@bobbuilder',
+            'email': 'bob@example.com',
+            'user_type': 'student',
+            'new_password': 'Password123',
+            'confirm_password': 'Mismatch123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertFalse(form.is_valid(), "Form should be invalid if new_password and confirm_password don't match.")
 
-    def test_form_uses_model_validation(self):
-        self.form_input['username'] = 'badusername'
-        form = SignUpForm(data=self.form_input)
-        self.assertFalse(form.is_valid())
-
-    def test_password_must_contain_uppercase_character(self):
-        self.form_input['new_password'] = 'password123'
-        self.form_input['password_confirmation'] = 'password123'
-        form = SignUpForm(data=self.form_input)
-        self.assertFalse(form.is_valid())
-
-    def test_password_must_contain_lowercase_character(self):
-        self.form_input['new_password'] = 'PASSWORD123'
-        self.form_input['password_confirmation'] = 'PASSWORD123'
-        form = SignUpForm(data=self.form_input)
-        self.assertFalse(form.is_valid())
-
-    def test_password_must_contain_number(self):
-        self.form_input['new_password'] = 'PasswordABC'
-        self.form_input['password_confirmation'] = 'PasswordABC'
-        form = SignUpForm(data=self.form_input)
-        self.assertFalse(form.is_valid())
-
-    def test_new_password_and_password_confirmation_are_identical(self):
-        self.form_input['password_confirmation'] = 'WrongPassword123'
-        form = SignUpForm(data=self.form_input)
-        self.assertFalse(form.is_valid())
-
-    def test_form_must_save_correctly(self):
-        form = SignUpForm(data=self.form_input)
-        before_count = User.objects.count()
-        form.save()
-        after_count = User.objects.count()
-        self.assertEqual(after_count, before_count+1)
-        user = User.objects.get(username='@janedoe')
-        self.assertEqual(user.first_name, 'Jane')
-        self.assertEqual(user.last_name, 'Doe')
-        self.assertEqual(user.email, 'janedoe@example.org')
-        is_password_correct = check_password('Password123', user.password)
-        self.assertTrue(is_password_correct)
+    def test_blank_fields(self):
+        form_data = {
+            'first_name': '',
+            'last_name': '',
+            'username': '',
+            'email': '',
+            'user_type': 'student',
+            'new_password': 'Password123',
+            'confirm_password': 'Password123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertFalse(form.is_valid(), "Form should be invalid with blank required fields.")

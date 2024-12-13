@@ -1,9 +1,12 @@
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from libgravatar import Gravatar
 
 from django.conf import settings
+
+from decimal import Decimal
 
 class User(AbstractUser):
     """Model used for user authentication, and team member related information."""
@@ -70,7 +73,12 @@ class TutorProfile(models.Model):
 
     def __str__(self):
         return f"Tutor: {self.user.full_name()}"
-    
+
+    def clean(self):
+        super().clean()
+        if self.experience_years < 0:
+            raise ValidationError({'experience_years': 'Experience years cannot be negative.'})
+
 
 class StudentProfile(models.Model):
     """
@@ -109,6 +117,11 @@ class Term(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.start_date > self.end_date:
+            raise ValidationError('Start date must be before end date.')
     
 class Venue(models.Model):
     """
@@ -152,9 +165,7 @@ class LessonRequest(models.Model):
         related_name='lesson_requests'
     )
     requested_languages = models.TextField(blank=True, help_text="Programming languages the student wants to learn.")
-
     requested_specializations = models.TextField(blank=True, help_text="Advanced topics the student wants to focus on.")
-
     frequency = models.CharField(
         max_length=20,
         choices=FREQUENCY_CHOICES,
@@ -180,7 +191,6 @@ class LessonRequest(models.Model):
         related_name='requested_lessons',
         help_text="Preferred venue for the lessons (if any)."
     )
-    # No strict enforcement of deadlines: admin can still accept late requests.
     status = models.CharField(
         max_length=20,
         choices=[('pending', 'Pending'), ('allocated', 'Allocated'), ('rejected', 'Rejected')],
@@ -195,6 +205,10 @@ class LessonRequest(models.Model):
     def __str__(self):
         return f"Request by {self.student} for {self.term}"
 
+    def clean(self):
+        super().clean()
+        if self.duration_minutes <= 0:
+            raise ValidationError({'duration_minutes': 'Duration must be greater than zero.'})
 
 class Lesson(models.Model):
     """
@@ -207,7 +221,6 @@ class Lesson(models.Model):
         ('fortnightly', 'Every other week'),
     ]
 
-    # This can reference the original request if relevant, but it's optional.
     request = models.ForeignKey(
         LessonRequest,
         on_delete=models.SET_NULL,
@@ -262,6 +275,11 @@ class Lesson(models.Model):
     def __str__(self):
         return f"Lesson: {self.student.user.full_name()} with {self.tutor.user.full_name()} at {self.venue}"
 
+    def clean(self):
+        super().clean()
+        if self.duration_minutes <= 0:
+            raise ValidationError({'duration_minutes': 'Duration must be greater than zero.'})
+
 
 class Invoice(models.Model):
     """
@@ -278,7 +296,12 @@ class Invoice(models.Model):
         on_delete=models.CASCADE,
         related_name='invoices'
     )
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    # Enforce non-negative and limit decimal places:
+    amount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     issued_date = models.DateField(auto_now_add=True)
     paid_date = models.DateField(
         null=True,
@@ -295,3 +318,8 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"Invoice for {self.student.user.full_name()} - {self.term.name}"
+
+    def clean(self):
+        super().clean()
+        if self.amount < 0:
+            raise ValidationError({'amount': 'Amount cannot be negative.'})

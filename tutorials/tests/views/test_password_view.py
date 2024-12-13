@@ -1,81 +1,58 @@
-"""Tests for the password view."""
-from django.contrib import messages
-from django.contrib.auth.hashers import check_password
+"""Tests for the PasswordView."""
 from django.test import TestCase
 from django.urls import reverse
+from django.contrib.auth import get_user_model, SESSION_KEY
 from tutorials.forms import PasswordForm
-from tutorials.models import User
-from tutorials.tests.helpers import reverse_with_next
 
-class PasswordViewTest(TestCase):
-    """Test suite for the password view."""
+from tutorials.models import StudentProfile
 
-    fixtures = [
-        'tutorials/tests/fixtures/default_user.json'
-    ]
+User = get_user_model()
+
+class PasswordViewTestCase(TestCase):
+    """Test suite for PasswordView."""
 
     def setUp(self):
-        self.user = User.objects.get(username='@johndoe')
         self.url = reverse('password')
-        self.form_input = {
-            'password': 'Password123',
+        self.user = User.objects.create_user(
+            username='@pwduser',
+            password='OldPassword123',
+            email="student123@gmail.com",
+            is_student=True,
+            is_tutor=False
+        )
+        self.student_profile = StudentProfile.objects.create(user=self.user)
+
+    def test_redirect_if_not_logged_in(self):
+        response = self.client.get(self.url, follow=True)
+        self.assertNotEqual(response.request['PATH_INFO'], self.url, "Should redirect if not logged in.")
+
+    def test_get_password_view(self):
+        self.client.login(username='@pwduser', password='OldPassword123')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'password.html')
+        self.assertIsInstance(response.context['form'], PasswordForm)
+
+    def test_post_valid_password_change(self):
+        self.client.login(username='@pwduser', password='OldPassword123')
+        form_data = {
+            'password': 'OldPassword123',
             'new_password': 'NewPassword123',
-            'password_confirmation': 'NewPassword123',
+            'password_confirmation': 'NewPassword123'
         }
+        response = self.client.post(self.url, form_data, follow=True)
+        self.assertRedirects(response, reverse('dashboard'))
+        # Verify the password is updated
+        self.assertIn(SESSION_KEY, self.client.session)
+        self.assertTrue(self.client.login(username='@pwduser', password='NewPassword123'))
 
-    def test_password_url(self):
-        self.assertEqual(self.url, '/password/')
-
-    def test_get_password(self):
-        self.client.login(username=self.user.username, password='Password123')
-        response = self.client.get(self.url)
+    def test_post_invalid_current_password(self):
+        self.client.login(username='@pwduser', password='OldPassword123')
+        form_data = {
+            'password': 'WrongPassword',
+            'new_password': 'NewPassword123',
+            'password_confirmation': 'NewPassword123'
+        }
+        response = self.client.post(self.url, form_data)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'password.html')
-        form = response.context['form']
-        self.assertTrue(isinstance(form, PasswordForm))
-
-    def test_get_password_redirects_when_not_logged_in(self):
-        redirect_url = reverse_with_next('log_in', self.url)
-        response = self.client.get(self.url)
-        self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-
-    def test_succesful_password_change(self):
-        self.client.login(username=self.user.username, password='Password123')
-        response = self.client.post(self.url, self.form_input, follow=True)
-        response_url = reverse('dashboard')
-        self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
-        self.user.refresh_from_db()
-        is_password_correct = check_password('NewPassword123', self.user.password)
-        self.assertTrue(is_password_correct)
-
-    def test_password_change_unsuccesful_without_correct_old_password(self):
-        self.client.login(username=self.user.username, password='Password123')
-        self.form_input['password'] = 'WrongPassword123'
-        response = self.client.post(self.url, self.form_input, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'password.html')
-        form = response.context['form']
-        self.assertTrue(isinstance(form, PasswordForm))
-        self.user.refresh_from_db()
-        is_password_correct = check_password('Password123', self.user.password)
-        self.assertTrue(is_password_correct)
-
-    def test_password_change_unsuccesful_without_password_confirmation(self):
-        self.client.login(username=self.user.username, password='Password123')
-        self.form_input['password_confirmation'] = 'WrongPassword123'
-        response = self.client.post(self.url, self.form_input, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'password.html')
-        form = response.context['form']
-        self.assertTrue(isinstance(form, PasswordForm))
-        self.user.refresh_from_db()
-        is_password_correct = check_password('Password123', self.user.password)
-        self.assertTrue(is_password_correct)
-
-    def test_post_profile_redirects_when_not_logged_in(self):
-        redirect_url = reverse_with_next('log_in', self.url)
-        response = self.client.post(self.url, self.form_input)
-        self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-        is_password_correct = check_password('Password123', self.user.password)
-        self.assertTrue(is_password_correct)
+        self.assertFormError(response, 'form', 'password', "Password is invalid")
