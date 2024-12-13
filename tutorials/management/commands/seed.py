@@ -12,6 +12,18 @@ user_fixtures = [
     {'username': '@charlie', 'email': 'charlie.johnson@example.org', 'first_name': 'Charlie', 'last_name': 'Johnson', 'is_student': True},
 ]
 
+term_fixtures = [
+    {'name': 'Term 1 2024', 'start_date': date(2024, 9, 1), 'end_date': date(2024, 12, 1)},
+    {'name': 'Term 2 2024', 'start_date': date(2024, 1, 1), 'end_date': date(2024, 4, 1)},
+    {'name': 'Term 3 2024', 'start_date': date(2024, 5, 1), 'end_date': date(2024, 8, 1)},
+    {'name': 'Term 1 2025', 'start_date': date(2025, 9, 1), 'end_date': date(2025, 12, 1)},
+    {'name': 'Term 2 2025', 'start_date': date(2025, 1, 1), 'end_date': date(2025, 4, 1)},
+    {'name': 'Term 3 2025', 'start_date': date(2025, 5, 1), 'end_date': date(2025, 8, 1)},
+    {'name': 'Term 1 2026', 'start_date': date(2026, 9, 1), 'end_date': date(2026, 12, 1)},
+    {'name': 'Term 2 2026', 'start_date': date(2026, 1, 1), 'end_date': date(2026, 4, 1)},
+    {'name': 'Term 3 2026', 'start_date': date(2026, 5, 1), 'end_date': date(2026, 8, 1)},
+]
+
 logging.basicConfig(level=logging.DEBUG)
 
 class Command(BaseCommand):
@@ -27,11 +39,20 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.create_users()
         self.create_profiles()
+        self.create_terms()
         self.create_fixtures()
 
     def create_users(self):
         for data in user_fixtures:
             self.try_create_user(data)
+
+    def create_terms(self):
+        for data in term_fixtures:
+            Term.objects.create(
+                name=data['name'],
+                start_date=data['start_date'],
+                end_date=data['end_date']
+            )
 
     def create_profiles(self):
         jane = User.objects.get(username='@janedoe')
@@ -41,7 +62,7 @@ class Command(BaseCommand):
         StudentProfile.objects.create(user=charlie, notes="Eager to learn programming.")
 
     def create_fixtures(self):
-        term = Term.objects.create(name="Spring 2026", start_date=date(2026, 3, 1), end_date=date(2026, 6, 1))
+        term = Term.objects.get(name='Term 3 2026')
         venue = Venue.objects.create(name="Main Hall", address="123 Learning Lane")
 
         charlie = StudentProfile.objects.get(user__username='@charlie')
@@ -61,7 +82,7 @@ class Command(BaseCommand):
             requested_specializations="Web Development",
             frequency="weekly",
             duration_minutes=60,
-            requested_start_date=date(2026, 3, 10),
+            requested_start_date=date(2026, 4, 10),
             requested_start_time=time(10, 0),
             requested_venue=venue,
             notes="Looking to build foundational skills."
@@ -74,7 +95,7 @@ class Command(BaseCommand):
             student=charlie,
             term=term,
             venue=venue,
-            start_date=date(2024, 3, 10),
+            start_date=date(2026, 4, 15),
             start_time=time(10, 0),
             frequency="weekly",
             duration_minutes=60,
@@ -87,7 +108,7 @@ class Command(BaseCommand):
             student=charlie,
             term=term,
             amount=200.00,
-            notes="Invoice for weekly lessons in Spring 2024."
+            notes="Invoice for weekly lessons in Term 3 2026."
         )
 
     def try_create_user(self, data):
